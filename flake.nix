@@ -15,7 +15,7 @@
 
         evilExample =
           let
-            url = "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/d3a0d33b25654bae1f833f44499f56a434883423/hello.txt";
+            url = "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/b64fa0c2e4fba7615221b633dce5ac30d9f26929/hello-world.txt";
           in
           final.evilDownloadUrl url;
       };

@@ -1,5 +1,5 @@
 
-{ stdenv, lib, curl, xxd, cacert, collisions }:
+{ cacert, collisions, curl, lib, stdenv, xxd }:
 
 { url, urlHash, bitNum, bitNumStr }:
 
@@ -11,7 +11,7 @@ in
 
 stdenv.mkDerivation {
 
-  name = "tryfetch-${urlHash}-${bitNumStr}";
+  name = "downloadBitNum-${urlHash}-${bitNumStr}";
   inherit url;
 
   outputHash = "d00bbe65d80f6d53d5c15da7c6b4f0a655c5a86a";
@@ -36,12 +36,7 @@ stdenv.mkDerivation {
       --insecure
     )
     if SSL_CERT_FILE="${cacert}/etc/ssl/certs/ca-bundle.crt" "''${curl[@]}" "$url" > ./downloaded_file; then
-      set -x
-      cat ./downloaded_file
-      dd if=downloaded_file bs=1 count=1 skip=${byteNumStr} status=none | xxd -b
       first_char="$(dd if=downloaded_file bs=1 count=1 skip=${byteNumStr} status=none | xxd -b | cut -d' ' -f2 | tail -c +${toString (bitInByteNum + 1)} | head -c1)"
-      echo $first_char
-      set +x
       if [ "$first_char" == "1" ]; then
         cp "$bitValue1Pdf" "$out"
       elif [ "$first_char" == "0" ]; then

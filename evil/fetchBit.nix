@@ -1,14 +1,15 @@
 
-{ runCommand, downloadBitNum, collisions }:
+{ runCommand, downloadBitNum, collisions, drvNamePrefix ? "" }:
 
 url: bitNum:
 
 let
   urlHash = builtins.hashString "sha256" url;
   bitNumStr = toString bitNum;
+  drvNamePrefix' = if drvNamePrefix == "" then "" else "${drvNamePrefix}-";
 in
 runCommand
-  "bitvalue-${urlHash}-${bitNumStr}"
+  "${drvNamePrefix'}bitvalue-${urlHash}-${bitNumStr}"
   {
     result = downloadBitNum { inherit url urlHash bitNum bitNumStr; };
     inherit (collisions) bitValue1Pdf;

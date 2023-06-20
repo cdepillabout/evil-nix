@@ -4,29 +4,28 @@
 url:
 
 let
+  # The total number of bits to use to represent the file size.
+  fileSizeTotalBits = 16;
+
   collisions = callPackage ./collisions.nix {};
 
-  downloadBitNum = callPackage ./downloadBitNum.nix { inherit collisions; };
+  downloadBitNum = callPackage ./downloadBitNum.nix {
+    inherit collisions;
+  };
 
-  fetchBit = callPackage ./fetchBit.nix { inherit collisions downloadBitNum; };
+  downloadFileSizeBitNum = callPackage ./downloadFileSizeBitNum.nix {
+    inherit collisions fileSizeTotalBits;
+  };
 
-  # doFetch = startBit: stopBit:
-  #   let
-  #     f = bitNum: fetchBit url (bitNum + startBit);
+  fetchBit = callPackage ./fetchBit.nix {
+    inherit collisions downloadBitNum;
+  };
 
-  #     l = builtins.genList f (stopBit - startBit);
-  #   in
-  #   runCommand
-  #     "lalal"
-  #     {
-  #       passAsFile = [ "allBitDrvs" ];
-  #       allBitDrvs = l;
-  #     }
-  #     ''
-  #       (tr ' ' '\n' < "$allBitDrvsPath" ; echo) | while read -r line ; do
-  #         tr --delete '\n' < "$line" >> "$out"
-  #       done
-  #     '';
+  fetchFileSizeBit = callPackage ./fetchBit.nix {
+    inherit collisions;
+    downloadBitNum = downloadFileSizeBitNum;
+    drvNamePrefix = "file-size";
+  };
 
   fetchByte = url: byteNum:
     let
@@ -45,15 +44,9 @@ let
           tr --delete '\n' < "$line" >> ./bitValues
         done
 
-        set -x
-
-        cat ./bitValues
-
         bits="$(cat ./bitValues)"
         decimal="$((2#$bits))"
         hex="$(printf '%x' $decimal)"
-
-        echo $bits
 
         printf '%b' "\\x$hex" > $out
       '';
@@ -74,17 +67,34 @@ let
         done
       '';
 
-  # fetchExample = doFetch (1 * 8) (2 * 8);
 
-  # xxx = import fetchExample;
+  fetchFileSize = url:
+    let
+      f = fileSizeBit: fetchFileSizeBit url fileSizeBit;
+      l = builtins.genList f fileSizeTotalBits;
+    in
+    runCommand
+      "lalal"
+      {
+        passAsFile = [ "allBitDrvs" ];
+        allBitDrvs = l;
+      }
+      ''
+        (tr ' ' '\n' < "$allBitDrvsPath" ; echo) | while read -r line ; do
+          tr --delete '\n' < "$line" >> ./fileSizeBitValues
+        done
 
+        bits="$(cat ./fileSizeBitValues)"
+        echo "$((2#$bits))" > "$out"
+      '';
 
-  # myurl = "https://raw.githubusercontent.com/WinMerge/winmerge/66e2ce0986d9a491a0b0ca1fe18df65c9b7b3cfd/Testing/Data/Compare1/Dir2/file2_1.txt";
-
-  # myresultForBit = { bitValue }: fetchBit myurl bitValue;
+  fileSize = import (fetchFileSize url);
 in
 
-fetchBytes url 6
+fetchBytes url fileSize
+
+# fetchFileSize url
+# fetchBytes url 6
 
 # runCommand
 #   "lalal"
