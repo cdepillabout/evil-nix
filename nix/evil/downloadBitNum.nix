@@ -8,10 +8,9 @@
 , xxd
 }:
 
-# This produces a FOD that downloads the specified bit of a URL.
-# The output is one of two PDF files.  `collisions.bitValue1Pdf`
-# is used to represent a `1` bit, while `collisions.bitValue0Pdf`
-# is used to represent a `0` bit.
+# This produces a FOD that downloads the specified bit of a URL. The output is
+# one of two PDF files.  `collisions.bitValue1Pdf` is used to represent a `1`
+# bit, while `collisions.bitValue0Pdf` is used to represent a `0` bit.
 
 { # URL to download.
   # Example: "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello-world.txt"

@@ -1,5 +1,22 @@
 
-{ bc, cacert, collisions, curl, fileSizeTotalBits, lib, stdenv, xxd }:
+# See ./downloadBitNum.nix for more documentation.
+
+{ bc
+, cacert
+, collisions
+, curl
+, # The total number of bits to use for a file size.
+  # Example: 16 (which would be 2 bytes)
+  fileSizeTotalBits
+, lib
+, stdenv
+, xxd
+}:
+
+# This produces a FOD that downloads the specified bit of the file size of a
+# given URL. The output is one of two PDF files.  This is similar to
+# ./downloadBitNum.nix, but it outputs a bit corresponding to the file size,
+# instead of the content of the file to be downloaded.
 
 { url, urlHash, bitNum, bitNumStr }:
 
@@ -8,7 +25,7 @@ stdenv.mkDerivation {
   name = "downloadFileSizeBitNum-${urlHash}-${bitNumStr}";
   inherit url;
 
-  outputHash = "d00bbe65d80f6d53d5c15da7c6b4f0a655c5a86a";
+  outputHash = collisions.sha1;
   outputHashMode = "flat";
   outputHashAlgo = "sha1";
 
