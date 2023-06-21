@@ -1,10 +1,19 @@
 
 { runCommand }:
 
+# This builds a derivation that has multiple outputs, each with a different
+# value, but the same SHA1 hash collision.
+#
+# This is taken from
+# https://github.com/NixOS/nixpkgs/commit/ed8f3b5fa3cebfc3662ad5fff098567616220cf8.
+# from @aszlig.
+
 runCommand
   "sha1-collisions"
   {
     outputs = [ "out" "bitValue1Pdf" "bitValue0Pdf" ];
+    # A base-64 encoded tarball that contains two PDF files, each with a
+    # different value, but with the same SHA1 hash.
     base64 = ''
       QlpoOTFBWSZTWbL5V5MABl///////9Pv///v////+/////HDdK739/677r+W3/75rUNr4
       Aa/AAAAAAACgEVTRtQDQAaA0AAyGmjTQGmgAAANGgAaMIAYgGgAABo0AAAAAADQAIAGQ0
