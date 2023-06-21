@@ -23,4 +23,4 @@ runCommand
 
     bits="$(cat ./fileSizeBitValues)"
     echo "$((2#$bits))" > "$out"
-  '';
+  ''

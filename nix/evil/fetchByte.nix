@@ -26,4 +26,4 @@ runCommand
     hex="$(printf '%x' $decimal)"
 
     printf '%b' "\\x$hex" > $out
-  '';
+  ''

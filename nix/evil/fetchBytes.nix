@@ -18,4 +18,4 @@ runCommand
     (tr ' ' '\n' < "$allByteDrvsPath" ; echo) | while read -r line ; do
       head -c1 "$line" >> $out
     done
-  '';
+  ''

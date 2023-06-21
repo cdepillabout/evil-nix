@@ -37,31 +37,15 @@ let
     inherit fetchBit;
   };
 
-  fetchByte = callPackage ./fetchBytes.nix {
+  fetchBytes = callPackage ./fetchBytes.nix {
     inherit fetchByte;
   };
 
   fetchFileSize = callPackage ./fetchFileSize.nix {
+    inherit fetchFileSizeBit fileSizeTotalBits;
   };
 
   fileSize = import (fetchFileSize url);
 in
 
 fetchBytes url fileSize
-
-# fetchFileSize url
-# fetchBytes url 6
-
-# runCommand
-#   "lalal"
-#   {}
-#   ''
-#     echo ${toString xxx} > $out
-#   ''
-
-# TODO: Change everything to work on bytes intead of bits!
-# doFetch (1 * 8) (2 * 8)
-
-# runCommand "test" {} ''
-#   cp ${../README.md} $out
-# ''
