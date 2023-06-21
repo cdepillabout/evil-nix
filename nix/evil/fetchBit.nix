@@ -5,11 +5,9 @@
 , drvNamePrefix ? ""
 }:
 
-url: bitNum:
+url: urlHash: bitNum:
 
 let
-  urlHash = builtins.hashString "sha256" url;
-
   bitNumStr = toString bitNum;
 
   drvNamePrefix' = if drvNamePrefix == "" then "" else "${drvNamePrefix}-";

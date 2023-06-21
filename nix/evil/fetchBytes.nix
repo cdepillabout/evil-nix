@@ -6,10 +6,12 @@
 url: bytes:
 
 let
-  l = builtins.genList (fetchByte url) bytes;
+  urlHash = builtins.hashString "sha256" url;
+
+  l = builtins.genList (fetchByte url urlHash) bytes;
 in
 runCommand
-  "fetchBytes"
+  "fetchBytes-${urlHash}-${toString bytes}"
   {
     passAsFile = [ "allByteDrvs" ];
     allByteDrvs = l;

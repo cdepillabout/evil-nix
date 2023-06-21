@@ -3,15 +3,15 @@
 , runCommand
 }:
 
-url: byteNum:
+url: urlHash: byteNum:
 
 let
-  f = bitOffset: fetchBit url (byteNum * 8 + bitOffset);
+  f = bitOffset: fetchBit url urlHash (byteNum * 8 + bitOffset);
 
   l = builtins.genList f 8;
 in
 runCommand
-  "fetchByte"
+  "fetchByte-${urlHash}-${toString byteNum}"
   {
     passAsFile = [ "allBitDrvs" ];
     allBitDrvs = l;

@@ -7,11 +7,14 @@
 url:
 
 let
-  f = fileSizeBit: fetchFileSizeBit url fileSizeBit;
+  urlHash = builtins.hashString "sha256" url;
+
+  f = fileSizeBit: fetchFileSizeBit url urlHash fileSizeBit;
+
   l = builtins.genList f fileSizeTotalBits;
 in
 runCommand
-  "fetchFileSize"
+  "fetchFileSize-${urlHash}-${toString fileSizeTotalBits}"
   {
     passAsFile = [ "allBitDrvs" ];
     allBitDrvs = l;
