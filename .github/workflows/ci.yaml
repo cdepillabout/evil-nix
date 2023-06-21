@@ -10,9 +10,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v22
-      - name: Assert example from flake has expected output
-        run: |
-          curl 'https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/short-sentence.txt' > short-sentence.txt
-          false
       - name: Build example from flake
         run: nix build -L
+      - name: Assert example from flake has expected output
+        run: |
+          # Download the actual example file that we have downloaded with Nix.
+          curl 'https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/short-sentence.txt' > ./short-sentence.txt
+          cmp ./short-sentence.txt ./result
