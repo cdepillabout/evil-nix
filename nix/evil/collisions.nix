@@ -11,7 +11,16 @@
 runCommand
   "sha1-collisions"
   {
-    outputs = [ "out" "bitValue1Pdf" "bitValue0Pdf" ];
+    outputs = [
+      # This contains nothing.  Probably could delete it.
+      "out"
+      # This output contains one PDF.  It is the output we use to represent a
+      # bit value 1.
+      "bitValue1Pdf"
+      # This output contains another PDF.  It is the output we use to represent
+      # a bit value 0.
+      "bitValue0Pdf"
+    ];
     # A base-64 encoded tarball that contains two PDF files, each with a
     # different value, but with the same SHA1 hash.
     base64 = ''
@@ -50,6 +59,8 @@ runCommand
       3vuEvJ2beoh7SGyZKHKbR2bBWO1d49JDIcVM6lQtu9UO8ec8pOnXmkcponBPLNM2CwZ9k
       NC/4ct6rQkPkQHMcV/8XckU4UJCy+VeTA==
     '';
+
+    # The SHA1 of both PDFs.
     passthru.sha1 = "d00bbe65d80f6d53d5c15da7c6b4f0a655c5a86a";
   }
   ''
