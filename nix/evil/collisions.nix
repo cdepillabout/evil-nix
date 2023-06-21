@@ -50,6 +50,7 @@ runCommand
       3vuEvJ2beoh7SGyZKHKbR2bBWO1d49JDIcVM6lQtu9UO8ec8pOnXmkcponBPLNM2CwZ9k
       NC/4ct6rQkPkQHMcV/8XckU4UJCy+VeTA==
     '';
+    passthru.sha1 = "d00bbe65d80f6d53d5c15da7c6b4f0a655c5a86a";
   }
   ''
     echo "$base64" | base64 -d | tar xj

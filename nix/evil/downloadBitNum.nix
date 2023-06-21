@@ -1,5 +1,14 @@
 
-{ cacert, collisions, curl, lib, stdenv, xxd }:
+{ cacert
+, # A set of SHA1 collisions.  This should come from ./collisions.nix.
+  collisions
+, curl
+, lib
+, stdenv
+, xxd
+}:
+
+# Download the specified bit of a URL.
 
 { url, urlHash, bitNum, bitNumStr }:
 
@@ -14,7 +23,7 @@ stdenv.mkDerivation {
   name = "downloadBitNum-${urlHash}-${bitNumStr}";
   inherit url;
 
-  outputHash = "d00bbe65d80f6d53d5c15da7c6b4f0a655c5a86a";
+  outputHash = collisions.sha1;
   outputHashMode = "flat";
   outputHashAlgo = "sha1";
 

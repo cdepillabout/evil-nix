@@ -15,5 +15,5 @@ jobs:
       - name: Assert example from flake has expected output
         run: |
           # Download the actual example file that we have downloaded with Nix.
-          curl 'https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/short-sentence.txt' > ./short-sentence.txt
-          cmp ./short-sentence.txt ./result
+          curl 'https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello-world.txt' > ./hello-world.txt
+          cmp ./hello-world.txt ./result
