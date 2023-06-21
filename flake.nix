@@ -10,15 +10,15 @@
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; overlays = [ self.overlay ]; });
     in
     {
-      overlay = final: prev: {
-        evilDownloadUrl = final.callPackage ./evil {};
-
-        evilExample =
-          let
-            url = "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/short-sentence.txt";
-          in
-          final.evilDownloadUrl url;
-      };
+      overlay = final: prev:
+        import ./nix/overlay.nix final prev //
+        {
+          evilExample =
+            let
+              url = "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/short-sentence.txt";
+            in
+            final.evilDownloadUrl url;
+        };
 
       evilDownloadUrl = forAllSystems (system: nixpkgsFor.${system}.evilDownloadUrl);
 
