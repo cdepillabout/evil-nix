@@ -13,11 +13,29 @@
 # is used to represent a `1` bit, while `collisions.bitValue0Pdf`
 # is used to represent a `0` bit.
 
-{ url, urlHash, bitNum, bitNumStr }:
+{ # URL to download.
+  # Example: "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello-world.txt"
+  url
+, # Hash of the URL to download.
+  # Example: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+  urlHash
+, # The bit number of the URL we will output.
+  # Example: 12
+  bitNum
+, # A string representation of the bit number
+  # Example: "12"
+  bitNumStr
+}:
 
 let
+  # The index of the byte that contains this bit. For instance, when `bitNum`
+  # is 19, `byteNum` is 2 (the 3rd byte).
   byteNum = bitNum / 8;
+
   byteNumStr = toString byteNum;
+
+  # The index of the bit in the byte we want.  For instance, when `bitNum` is
+  # 18, `bitInByteNum` is `3` (the 4th bit in the 3rd byte).
   bitInByteNum = lib.mod bitNum 8;
 in
 
