@@ -15,7 +15,14 @@
         {
           evilExample =
             let
+              # This is a very short 5-byte example file.
+              # url = "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello.txt";
+
+              # This is a short 12-byte example file.
               url = "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello-world.txt";
+
+              # This is a longer 52-byte example file.
+              # url = "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/short-sentence.txt";
             in
             final.evilDownloadUrl url;
         };

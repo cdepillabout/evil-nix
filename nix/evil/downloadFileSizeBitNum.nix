@@ -13,6 +13,10 @@
 , xxd
 }:
 
+let
+  fileSizeTotalBitsStr = toString fileSizeTotalBits;
+in
+
 # This produces a FOD that downloads the specified bit of the file size of a
 # given URL. The output is one of two PDF files.  This is similar to
 # ./downloadBitNum.nix, but it outputs a bit corresponding to the file size,
@@ -62,16 +66,16 @@ stdenv.mkDerivation {
       # Example: "9"
       file_size_actual_total_bits="''${#file_size_binary}"
 
-      if [ "$file_size_actual_total_bits" -gt "${toString fileSizeTotalBits}" ]; then
+      if [ "$file_size_actual_total_bits" -gt "${fileSizeTotalBitsStr}" ]; then
         echo "Trying to download the file ${url}, which has a file size of $file_size_decimal bytes."
         echo "However, this takes $file_size_actual_total_bits bits to represent, which is larger than"
-        echo "${toString fileSizeTotalBits} bits, the maximum allowed."
+        echo "${fileSizeTotalBitsStr} bits, the maximum allowed."
         exit 1
       fi
 
-      # The size of the file padded with zeros so that it is 16 bits.
+      # The size of the file padded with zeros so that it is $fileSizeTotalBits bits.
       # Example: "0000000100000100"
-      file_size_binary_padded=$(printf '%16s' "$file_size_binary" | tr ' ' 0)
+      file_size_binary_padded=$(printf '%${fileSizeTotalBitsStr}s' "$file_size_binary" | tr ' ' 0)
 
       # The bit of the filesize that we are looking for.  For example,
       # given the above file size in biary, if we are looking for the 14th bit
