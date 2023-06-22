@@ -11,6 +11,8 @@ let
   # WARNING: While technically you should be able to bump this value in order
   # to download files larger than 65kb, this will likely fill up your Nix store,
   # use up all your RAM, DOS the host you're trying to download from, etc.
+  # You probably don't want to ever try to download files larger than even just
+  # a few hundred bytes.
   fileSizeTotalBits = 16;
 
   collisions = callPackage ./collisions.nix {};
@@ -47,5 +49,4 @@ let
 
   fileSize = import (fetchFileSize url);
 in
-
 fetchBytes url fileSize
