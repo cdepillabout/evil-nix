@@ -1,6 +1,17 @@
 
 {runCommand, callPackage, lib}:
 
+# This function creates a derivaton that downloads and outputs the given URL,
+# even without specifying a hash for the file. It does in a way that even
+# works in pure-eval mode.
+#
+# Internally, it relies on Nix supporting FODs with SHA1 hashes, and utilizes
+# known SHA1 hash collisions to sneak single bits of data from the internet out
+# of FODs.
+
+
+# URL to download.
+# Example: "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello-world.txt"
 url:
 
 let

@@ -1,5 +1,5 @@
 {
-  description = "Nix library to allow downloading from the internet without using FODs";
+  description = "Nix library to allow downloading files from the internet without using FODs";
 
   inputs.nixpkgs.url = "nixpkgs/nixpkgs-unstable";
 
