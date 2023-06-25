@@ -32,8 +32,7 @@ This derivation produced the following outputs:
   out -> /nix/store/jhyzz6l9ryjl1npdf4alqyi1fy2qx1f0-fetchBytes-6bba65f4567f4165109177a5dafd5972882643e15d454018586fed35b068acf5-12
 ```
 
-And then you can confirm that this file actually contains the contents of the
-URL:
+You can confirm that this file actually contains the contents of the URL:
 
 ```console
 $ cat /nix/store/jhyzz6l9ryjl1npdf4alqyi1fy2qx1f0-fetchBytes-6bba65f4567f4165109177a5dafd5972882643e15d454018586fed35b068acf5-12
@@ -62,7 +61,7 @@ hello world
 The neat (evil) thing about `evilDownloadUrl` is that it even works in Nix's
 [`pure-eval`](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-pure-eval)
 mode.  In theory, `pure-eval` is supposed to require all downloaded files to
-have a hash specified:
+have a hash specified, but `evilDownloadUrl` works around this limitation:
 
 ```console
 $ nix build --pure-eval
@@ -73,12 +72,14 @@ hello world
 ### Extreme Inefficiency
 
 Due to the way this hack works, `evilDownloadUrl` is extremely inefficient.
-It does a request to the URL for every _bit_ (**!!**) of the file it is
+It performs one request to the URL for every _bit_ (**!!**) of the file it is
 trying to download.  For instance, if you were trying to download a
-10 byte file, `evilDownloadUrl` would actually download the file _80_ times.
+10 byte file, `evilDownloadUrl` would make _80_ requests to the URL, and
+download the file _80_ times.
 
 `evilDownloadUrl` also makes a lot of garbage in your Nix store.  Downloading a
-50 byte file makes about 4MB of garbage in your Nix store.
+50 byte file makes about 4MB of garbage in your Nix store.  This scales
+linerally. For example, a 100 byte would make about 8MB of garbage.
 
 It is also very slow.  Downloading a 50 byte file takes about 30 seconds on my
 machine.
@@ -107,9 +108,9 @@ $ nix-store --delete /nix/store/*-bitvalue-* /nix/store/*BitNum-* /nix/store/*-f
 
 ## How does this work?
 
-The `evilDownloadUrl` function works by internally creating fixed-output
-derivations which output one of two known files, both with the same SHA1 hash.
-These fixed-output derivations are allowed to access the network, and output
+The `evilDownloadUrl` function works by internally creatinga fixed-output
+derivation which outputs one of two known files, both with the same SHA1 hash.
+This fixed-output derivation is allowed to access the network, and outputs
 one file to represent a single `1` bit, and the other file to represent a
 single `0` bit.  This effectively leaks one bit of information from the
 internet in a non-reproducible manner.
@@ -119,7 +120,7 @@ in order to download an entire file from the internet.
 
 The next section is an introduction to Nix for a non-Nixer (or anyone that
 needs a refresher), focusing on the concepts needed to explain how
-`evilDownloadUrl` works. The section after is a longer, technical explanation
+`evilDownloadUrl` works. The section after is a technical explanation
 of how `evilDownloadUrl` works.
 
 ### Intro to Nix concepts for the non-Nixer
@@ -132,17 +133,18 @@ Nix.
 
 > While these explanations are intended to give you some idea of what is going
 > on, they may not be 100% completely technically accurate.  If you're a
-> long-time Nix user, you're recommended to just jump directly to the following
-> section.
+> long-time Nix user, you're recommended to just jump directly to the technical
+> explanation in the following section.
 
-Nix is quite a few different things.  It is a build tool and system daemon,
-somewhat similar to `docker build` and `dockerd`.  It is also a programming
-language, similar to the language used to write `Dockerfile`s (although more
-powerful and composable).  There is a large set of packages defined in the Nix
-language, called [`Nixpkgs`](https://github.com/NixOS/nixpkgs).  This is
-somewhat similar to the Debian or Arch Linux package sets.  Although, because
-of Nix's programability and composability, Nixpkgs feels much more powerful in
-some ways to other Linux distro's package sets.
+The Nix ecosystem is comprised of quite a few different things.  It is a build
+tool and system daemon, somewhat similar to `docker build` and `dockerd`.  It
+is also a programming language, similar to the language used to write
+`Dockerfile`s, although Nix more powerful and more composable.  There is a
+large set of packages defined using the Nix language, called
+[Nixpkgs](https://github.com/NixOS/nixpkgs).  This is somewhat similar to the
+Debian or Arch Linux package sets.  Although, because of Nix's programability
+and composability, Nixpkgs feels much more flexible than other Linux distro's
+package sets.
 
 There is also a Linux distribution called NixOS, which uses the Nix programming
 language to define system settings (for example, the contents of files in
@@ -337,23 +339,22 @@ them to form the full file.
 Due to the extreme inefficiency of `evilDownloadUrl`, the main use-case is not
 for Nixers, but actually for non-Nix users.
 
-If you're not a Nix user and you work in IT, I'm sure you have at least one
-coworker who is _waaaay_ too into Nix.  They likely bring it up in every
-conversation about your project's build system, CI, packaging, deployment, etc. You've
-probably heard them say the word "reproducibility" about 15 times in just the
-last week.
+If you work in IT, I'm sure you have at least one coworker who is _waaaay_ too
+into Nix.  They likely bring up Nix in every conversation about your project's
+build system, CI, packaging, deployment, etc. You've probably heard them say
+the word "hermetic" at least 5 times in the last week.
 
-The main use-case of `evil-nix` is the following: next time you hear them start
-to bring up Nix, hit them with "Eh, I heard Nix isn't _that_ great.  You can
-trivially download un-hashed files."
+The main use-case of `evil-nix` is for you. Next time you hear your coworker
+start to bring up Nix, hit them with "Eh, I heard Nix isn't that great.  You
+can trivially download un-hashed files.  Talk about lack of reproducibility, haha"
 
-They will likely start sputtering about sandboxes, unsafe hash functions, build
-purity, composability, etc.  You can safely ignore them, and rest assured in
-your current build system's mismatch of Makefiles, Bash scripts, YAML files,
-and containers.
+Your coworker will likely start sputtering about sandboxes, unsafe hash
+functions, build purity, composability, etc.  However, you can safely ignore
+them, and rest assured in your current build system's mismatch of Makefiles,
+Bash scripts, YAML files, and containers.
 
 If they still won't take the hint, suggest to them that they should learn a
-_real_ build system, like _Docker_.
+_real_ build tool, like _Docker_.
 
 ## Does `evil-nix` pose a security-related problem to the Nix ecosystem?
 
@@ -363,20 +364,16 @@ No
 
 1.  _Does this work with MD5 hashes instead of SHA1 hashes?_
 
+1.  _Does `evilDownloadUrl` require import from derivation (IFD)?_
+
+1.  _difference between `builtins.fetchTarball`_
+
+1.  _how could Nix be fixed to make `evilDownladUrl` stop working_
+
+    - disallow MD5 and SHA1 hashes in pure-eval mode
+    - turn off MD5 and SHA1 support by default, and hide functionality behind a config option
+
+1.  _can `evildDownloadUrl` return different data everytime it is called_
+
 ## Acknowledgements
 
-
-### blah
-
-mention it works in both restricted eval and pure eval modes!
-
-nix build -L --restrict-eval && cat ./result && rm ./result
-
-and
-
-nix build -L --pure-eval && cat ./result && rm ./result
-
-command for deleting everything that has been downloaded:
-rm -rf ./result;
-shopt -s nullglob;
-nix-store --delete /nix/store/*-bitvalue-* /nix/store/*BitNum-* /nix/store/*-fetchFileSize* /nix/store/*-fetchByte*
