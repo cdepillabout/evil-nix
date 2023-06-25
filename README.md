@@ -230,17 +230,31 @@ fetchurl {
 ```
 
 Fixed-output derivations are special in that they require the hash of the
-_output_ of the derivation to be specified (the `sha256 =` line above). In
+_output_ of the derivation to be specified in advance (the `sha256 =` line above). In
 exchange for specifying the hash, the Nix system daemon sandbox allows access
-to the network.  Since the output hash is known, we can expect full 100%
-reproducibility of this derivation.  If the derivation doesn't produce an
-output that exactly matches the hash, then the Nix system daemon will get angry
-with us and fail the build.
+to the network.  The above derivation will use `curl` to download the
+`hello-2.12.1.tar.gz` file, and set it as the _output_ of this fixed-output
+derivation.  This `hello-2.12.1.tar.gz` file must have the SHA256 hash
+`sha256-jZkUKv2SV28wsM18tCqNxoCZmLxdYH2Idh9RLibH2yA=`.
+
+Since the output hash is known, we can expect full 100% reproducibility of this
+derivation.  If the derivation doesn't produce an output that exactly matches
+the hash, then the Nix system daemon will get angry and fail the build.
 
 Just like non-fixed-output derivations, fixed-output derivations allow you to
-specify any arbitrary build commands you want.
+specify any arbitrary build commands you want.  The above `fetchurl` function
+is setup to use `curl`, but you could potentially write a similar function that
+internally uses `wget` instead.  Or maybe a derivation that uses `ftp` to pull
+a file from an FTP server.
 
-You can see that the above is a
+You can see that the above derivation uses a SHA256 hash.  Nix supports a few
+different hash types, including SHA1.  `evil-nix` exploits the fact that SHA1
+has known hash collisions.
+
+In practice, the Nix language makes it very easy to combine multiple
+derivations together.  For instance, the following Nix code is a normal
+derivation for GNU Hello, where the source code for GNU Hello is taken as the
+_output_ of a fixed-output derivation:
 
 ```console
 stdenv.mkDerivation {
@@ -255,7 +269,14 @@ stdenv.mkDerivation {
 }
 ```
 
+This ability to programmatically and easily combine different derivations makes
+Nix quite useful!  (As an aside, both the `gcc` and `make` build inputs are
+also just normal derivations, defined quite similarly to this GNU hello
+derivation).
 
+With this knowledge of normal _derivations_, _fixed-output derivations_, and
+derivation _outputs_, you should be set to understand how `evil-nix` exploits
+fixed-output derivations.
 
 ### Technical Explanation
 
@@ -266,8 +287,8 @@ output files `pdfA` and `pdfB`.
 
 These are special PDF files that have the same SHA1 hash.  The hash of the
 fixed-output derivation is set to this SHA1 hash.  This works because Nix still
-supports fixed-output derivations using SHA1 hashes, in the name of backwards
-compatibility.
+supports fixed-output derivations using SHA1 hashes (in the name of backwards
+compatibility).
 
 This fixed-output derivation takes a URL and a bit index as input. It downloads
 the input URL using `curl`, and inspects the bit at the given input index of
