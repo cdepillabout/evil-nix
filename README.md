@@ -89,8 +89,8 @@ While this is a fun library, you should never use this in any actual codebase.
 
 After playing around with `evilDownloadUrl`, you may want to clean up the
 garbage in your Nix store.  While you should always be able to use
-`nix-collect-garbage` to do a GC, you may want to specifically only delete
-files created by `evilDownloadUrl`.
+`nix-collect-garbage` to clean up your Nix store, you may want to specifically
+only delete files created by `evilDownloadUrl`.
 
 First, make sure you don't have the `result` output creating a GC root:
 
@@ -107,9 +107,75 @@ $ nix-store --delete /nix/store/*-bitvalue-* /nix/store/*BitNum-* /nix/store/*-f
 
 ## How does this work?
 
+The `evilDownloadUrl` function works by internally creating fixed-output
+derivations which output one of two known files, both with the same SHA1 hash.
+These fixed-output derivations are allowed to access the network, and output
+one file to represent a single `1` bit, and the other file to represent a
+single `0` bit.  This effectively leaks one bit of information from the
+internet in a non-reproducible manner.
+
+`evilDownloadUrl` combines many of these 1-bit-leaking fixed-output derivations
+in order to download an entire file from the internet.
+
+The next section is an introduction to Nix for a non-Nixer (or anyone that
+needs a refresher), focusing on the concepts needed to explain how
+`evilDownloadUrl` works. The section after is a longer, technical explanation
+of how `evilDownloadUrl` works.
+
 ### Intro to Nix concepts for the non-Nixer
 
 ### Technical Explanation
+
+The main trick in `evilDownloadUrl` is a fixed-output derivation that is able
+to return one bit of (non-hashed) data from the internet.  This fixed-output
+derivation works by preparing two different output files.  Let's call these
+output files `pdfA` and `pdfB`.
+
+These are special PDF files that have the same SHA1 hash.  The hash of the
+fixed-output derivation is set to this SHA1 hash.  This works because Nix still
+supports fixed-output derivations using SHA1 hashes, in the name of backwards
+compatibility.
+
+This fixed-output derivation takes a URL and a bit index as input. It downloads
+the input URL using `curl`, and inspects the bit at the given input index of
+the file. If the bit is a `1`, the fixed-output derivation sets `pdfA` as the
+output. If the bit is a `0`, it sets `pdfB` as the output.
+
+This is the critical trick.  From an information-theoretic perspective, you
+would expect that a fixed-output derivation is not able to realistically
+produce any additional information that is not already accounted for in the
+hash of the output.  However, combining a fixed-output derivation and a hash
+function with known collisions enables you to sneak out a single bit of data.
+
+You can see what this fixed-output derivation looks like in the file
+[`nix/evil/downloadBitNum.nix`](./nix/evil/downloadBitNum.nix).  This
+derivation is refered to as `downloadBitNum` in the `evil-nix` codebase.
+
+`downloadBitNum` is then wrapped with a simple (non-fixed-output) derivation
+that inspects the output of `downloadBitNum`.  This simple derivation is
+referred to as `fetchBit` in the codebase.
+
+`fetchBit` inspects the output of `downloadBitNum` and sees whether it matches
+`pdfA` or `pdfB`. If `pdfA` has been output, then `fetchBit` will create a
+single output file with the contents of an ASCII `1` character.  If
+`downloadBitNum` has output `pdfB`, then `fetchBit` will create a single output
+file with the contents of an ASCII `2` character.
+
+You can see what `fetchBit` looks like in the file
+[`nix/evil/fetchBit.nix`](./nix/evil/fetchBit.nix).
+
+`fetchBit` is then repeated 8 times, and the subsequent outputs combined to
+form a full byte of the input URL.  This is done in the function `fetchByte`,
+which is defined in [`nix/evil/fetchByte.nix`](./nix/evil/fetchByte.nix).
+
+`fetchByte` is then repeated for each byte of the input file.  This is done in
+the function `fetchBytes`, which is defined in
+[`nix/evil/fetchBytes.nix`](./nix/evil/fetchBytes.nix).
+
+`fetchBytes` outputs the full file we wanted to download from the input URL. By
+utilizing fixed-output derivations with SHA1 collisions, we're able to download
+all the individual bits of the input URL, and carefully reassemble them to form
+the full file.
 
 ## Use Cases
 
@@ -118,6 +184,10 @@ $ nix-store --delete /nix/store/*-bitvalue-* /nix/store/*BitNum-* /nix/store/*-f
 No
 
 ## FAQ
+
+1.  _Does this work with MD5 hashes instead of SHA1 hashes?_
+
+## Acknowledgements
 
 
 ### blah
