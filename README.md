@@ -326,12 +326,34 @@ which is defined in [`nix/evil/fetchByte.nix`](./nix/evil/fetchByte.nix).
 the function `fetchBytes`, which is defined in
 [`nix/evil/fetchBytes.nix`](./nix/evil/fetchBytes.nix).
 
-`fetchBytes` outputs the full file we wanted to download from the input URL. By
-utilizing fixed-output derivations with SHA1 collisions, we're able to download
-all the individual bits of the input URL, and carefully reassemble them to form
-the full file.
+`fetchBytes` outputs the full file we wanted to download from the input URL.
+
+By utilizing fixed-output derivations with SHA1 collisions, we're able to
+download all the individual bits of the input URL, and carefully reassemble
+them to form the full file.
 
 ## Use Cases
+
+Due to the extreme inefficiency of `evilDownloadUrl`, the main use-case is not
+for Nixers, but actually for non-Nix users.
+
+If you're not a Nix user and you work in IT, I'm sure you have at least one
+coworker who is _waaaay_ too into Nix.  They likely bring it up in every
+conversation about your project's build system, CI, packaging, deployment, etc. You've
+probably heard them say the word "reproducibility" about 15 times in just the
+last week.
+
+The main use-case of `evil-nix` is the following: next time you hear them start
+to bring up Nix, hit them with "Eh, I heard Nix isn't _that_ great.  You can
+trivially download un-hashed files."
+
+They will likely start sputtering about sandboxes, unsafe hash functions, build
+purity, composability, etc.  You can safely ignore them, and rest assured in
+your current build system's mismatch of Makefiles, Bash scripts, YAML files,
+and containers.
+
+If they still won't take the hint, suggest to them that they should learn a
+_real_ build system, like _Docker_.
 
 ## Does `evil-nix` pose a security-related problem to the Nix ecosystem?
 
