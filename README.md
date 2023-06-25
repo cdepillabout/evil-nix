@@ -174,17 +174,19 @@ declares two needed build tools, `gcc` and `make`.
 You may be wondering why there is no code explicitly calling `./configure &&
 make && make install`.  The `mkDerivation` function has internal support for
 checking if there is an Automake build system, and automatically runs these
-commands for us.  Pretty convenient!
+commands for us.  Pretty convenient!  Nix of course allows you to specify any
+arbitrary build commands you may want (similar to a `Dockerfile`), but in this
+case it is not needed.
 
 If this derivation is saved to a file in the current directory called
 `hello.nix` (and the current directory also contains the source code for the
 GNU Hello package), you should be able to build this derivation with a command
 like the following:
 
-> Note that this is not a _real_ derivation, and you can't actually save it to
-> disk and run it as-is.  It has been slightly modified to be easier to
-> understand.  Checkout one of the following tutorials for an intro to writing
-> real derivations:
+> Note that this `./hello.nix` file is not a _real_ derivation, and you can't
+> actually save it to disk and run it as-is.  It has been slightly modified to
+> be easier to understand for people new to Nix.  Checkout one of the following
+> tutorials an intro to writing real derivations:
 >
 > 1. [Your First Derivation](https://github.com/justinwoo/nix-shorts/blob/master/posts/your-first-derivation.md)
 > 2. [Hacking Your First Package](https://nix-tutorial.gitlabpages.inria.fr/nix-tutorial/first-package.html)
@@ -195,30 +197,61 @@ $ nix-build ./hello.nix
 ```
 
 This `nix-build` tool passes off the derivation to a system daemon.  The system
-daemon starts up a sandbox, and pulls in all the declared build tools and
-system libraries.  In our case, the only build tools that has been declared and
-available in the sandbox are `gcc` and `make`.  The system daemon then run the
-specified build steps in the sandbox environment (which in our case are
-`./configure && make && make install`).  The sandbox is a key element here.
+daemon starts up a sandbox, and pulls in all the declared build tools,
+system libraries, and source code.  In our case, the only build tools that has
+been declared and available in the sandbox are `gcc` and `make`.  The system
+daemon then runs the specified build steps in the sandbox environment (which in
+our case are `./configure && make && make install`).  After running a build,
+the derivation is responsible for _outputting_ a file (or a directory
+containing multiple files).  The output file is is known as the _output of the
+derivation_ (or just "_output_").  The output of a derivation is generally
+an ELF binary, HTML documentation, man pages, etc.
 
-Similar to how the Docker daemon sandboxes builds, the Nix system daemon also
-sandboxes builds.  However, the Nix system daemon goes one step further.  It
-doesn't even allow network access.  Since network access is not allowed during
-builds, you can be reasonably sure that your derivation is 100% reproducible.
-Regardless of what computer you run it on, it should always succeed or fail
-the same way.
+The sandbox is a key element here. The Nix system daemon sandbox is very
+similar to the Docker daemon sandbox. However, the Nix system daemon goes one
+step further.  It doesn't even allow network access.  Since network access is
+not allowed during builds, you can be reasonably sure that your derivation is
+100% reproducible. Regardless of what computer you run it on, it should always
+succeed or fail the same way.
 
-At this point, you may have the question, "Well, that's good and all, but
-if you don't have network access, how do you get the source code
+At this point, you may have the question, "Well, that's good and all, but if I
+don't have network access, how do I download the source code I need to build? I
+don't want to always have to keep the source code I want to build in my current
+directory!"
+
+To solve this problem, Nix provides a special type of derivation, called a
+_fixed-output derivation_.  Here's an example of a fixed-output derivation:
+
+```console
+fetchurl {
+    url = "https://ftp.gnu.org/pub/gnu/hello/hello-2.12.1.tar.gz";
+    sha256 = "sha256-jZkUKv2SV28wsM18tCqNxoCZmLxdYH2Idh9RLibH2yA=";
+}
+```
+
+Fixed-output derivations are special in that they require the hash of the
+_output_ of the derivation to be specified (the `sha256 =` line above). In
+exchange for specifying the hash, the Nix system daemon sandbox allows access
+to the network.  Since the output hash is known, we can expect full 100%
+reproducibility of this derivation.  If the derivation doesn't produce an
+output that exactly matches the hash, then the Nix system daemon will get angry
+with us and fail the build.
+
+Just like non-fixed-output derivations, fixed-output derivations allow you to
+specify any arbitrary build commands you want.
+
+You can see that the above is a
 
 ```console
 stdenv.mkDerivation {
-  pname = "hello";
-  version = "2.12.1";
+  name = "hello-2.12.1";
+
   src = fetchurl {
     url = "https://ftp.gnu.org/pub/gnu/hello/hello-2.12.1.tar.gz";
     sha256 = "sha256-jZkUKv2SV28wsM18tCqNxoCZmLxdYH2Idh9RLibH2yA=";
   };
+
+  nativeBuildInputs = [ gcc make ];
 }
 ```
 
