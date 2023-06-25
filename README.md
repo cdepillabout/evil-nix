@@ -124,6 +124,106 @@ of how `evilDownloadUrl` works.
 
 ### Intro to Nix concepts for the non-Nixer
 
+This section introduces the Nix concepts required for understanding `evil-nix`.
+It does this mostly by drawing comparisons to other build tools, including
+Docker.  These will be rough comparisions, intending to give you an idea about
+what is going on without having to dive head-first into the inner-workings of
+Nix.
+
+> While these explanations are intended to give you some idea of what is going
+> on, they may not be 100% completely technically accurate.  If you're a
+> long-time Nix user, you're recommended to just jump directly to the following
+> section.
+
+Nix is quite a few different things.  It is a build tool and system daemon,
+somewhat similar to `docker build` and `dockerd`.  It is also a programming
+language, similar to the language used to write `Dockerfile`s (although more
+powerful and composable).  There is a large set of packages defined in the Nix
+language, called [`Nixpkgs`](https://github.com/NixOS/nixpkgs).  This is
+somewhat similar to the Debian or Arch Linux package sets.  Although, because
+of Nix's programability and composability, Nixpkgs feels much more powerful in
+some ways to other Linux distro's package sets.
+
+There is also a Linux distribution called NixOS, which uses the Nix programming
+language to define system settings (for example, the contents of files in
+`/etc`), and uses packages from Nixpkgs.  NixOS feels like a cross between a
+normal Linux distribution and a tool like Ansible/Puppet/Chef.
+
+In order to understand `evil-nix`, we only need to look at the Nix
+the-programming-language and Nix the-build-tool.
+
+The Nix programming language has a concept of a _derivation_.  A derivation is
+a recipe to build a software package.  It is roughly similar to a `Dockerfile`.
+Let's look at a simple derivation:
+
+```console
+stdenv.mkDerivation {
+  name = "hello-2.12.1";
+
+  src = ./.;
+
+  nativeBuildInputs = [ gcc make ];
+}
+```
+
+This is a derivation to build the
+[GNU Hello](https://www.gnu.org/software/hello/) program. It declares its name
+and version, and takes the input source code from the current directory.  It
+declares two needed build tools, `gcc` and `make`.
+
+You may be wondering why there is no code explicitly calling `./configure &&
+make && make install`.  The `mkDerivation` function has internal support for
+checking if there is an Automake build system, and automatically runs these
+commands for us.  Pretty convenient!
+
+If this derivation is saved to a file in the current directory called
+`hello.nix` (and the current directory also contains the source code for the
+GNU Hello package), you should be able to build this derivation with a command
+like the following:
+
+> Note that this is not a _real_ derivation, and you can't actually save it to
+> disk and run it as-is.  It has been slightly modified to be easier to
+> understand.  Checkout one of the following tutorials for an intro to writing
+> real derivations:
+>
+> 1. [Your First Derivation](https://github.com/justinwoo/nix-shorts/blob/master/posts/your-first-derivation.md)
+> 2. [Hacking Your First Package](https://nix-tutorial.gitlabpages.inria.fr/nix-tutorial/first-package.html)
+> 3. [My first Nix derivation](https://www.adelbertc.com/first-nix-derivation/)
+
+```console
+$ nix-build ./hello.nix
+```
+
+This `nix-build` tool passes off the derivation to a system daemon.  The system
+daemon starts up a sandbox, and pulls in all the declared build tools and
+system libraries.  In our case, the only build tools that has been declared and
+available in the sandbox are `gcc` and `make`.  The system daemon then run the
+specified build steps in the sandbox environment (which in our case are
+`./configure && make && make install`).  The sandbox is a key element here.
+
+Similar to how the Docker daemon sandboxes builds, the Nix system daemon also
+sandboxes builds.  However, the Nix system daemon goes one step further.  It
+doesn't even allow network access.  Since network access is not allowed during
+builds, you can be reasonably sure that your derivation is 100% reproducible.
+Regardless of what computer you run it on, it should always succeed or fail
+the same way.
+
+At this point, you may have the question, "Well, that's good and all, but
+if you don't have network access, how do you get the source code
+
+```console
+stdenv.mkDerivation {
+  pname = "hello";
+  version = "2.12.1";
+  src = fetchurl {
+    url = "https://ftp.gnu.org/pub/gnu/hello/hello-2.12.1.tar.gz";
+    sha256 = "sha256-jZkUKv2SV28wsM18tCqNxoCZmLxdYH2Idh9RLibH2yA=";
+  };
+}
+```
+
+
+
 ### Technical Explanation
 
 The main trick in `evilDownloadUrl` is a fixed-output derivation that is able
