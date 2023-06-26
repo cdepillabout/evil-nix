@@ -166,7 +166,7 @@ The Nix programming language has a concept of a _derivation_.  A derivation can
 be thought of as a recipe to build a software package.  It is roughly similar
 to a `Dockerfile`. Let's look at a simple derivation:
 
-```console
+```nix
 stdenv.mkDerivation {
   name = "hello-2.12.1";
 
@@ -234,7 +234,7 @@ directory!"
 To solve this problem, Nix provides a special type of derivation, called a
 _fixed-output derivation_.  Here's an example of a fixed-output derivation:
 
-```console
+```nix
 fetchurl {
     url = "https://ftp.gnu.org/pub/gnu/hello/hello-2.12.1.tar.gz";
     sha256 = "sha256-jZkUKv2SV28wsM18tCqNxoCZmLxdYH2Idh9RLibH2yA=";
@@ -268,7 +268,7 @@ derivations together.  For instance, the following Nix code is a normal
 derivation for GNU Hello, where the source code for GNU Hello is taken as the
 _output_ of a fixed-output derivation:
 
-```console
+```nix
 stdenv.mkDerivation {
   name = "hello-2.12.1";
 
