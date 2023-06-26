@@ -346,7 +346,8 @@ the word "hermetic" at least 5 times in the last week.
 
 The main use-case of `evil-nix` is for you. Next time you hear your coworker
 start to bring up Nix, hit them with "Eh, I heard Nix isn't that great.  You
-can trivially download un-hashed files.  Talk about lack of reproducibility, haha"
+can trivially download un-hashed files.  Talk about lack of _reproducibility_,
+haha"
 
 Your coworker will likely start sputtering about sandboxes, unsafe hash
 functions, build purity, composability, etc.  However, you can safely ignore
@@ -356,22 +357,91 @@ Bash scripts, YAML files, and containers.
 If they still won't take the hint, suggest to them that they should learn a
 _real_ build tool, like _Docker_.
 
-## Does `evil-nix` pose a security-related problem to the Nix ecosystem?
-
-No
-
 ## FAQ
+
+1.  _Does `evil-nix` pose a security-related problem to the Nix ecosystem?_
+
+    No.
+
+    `evil-nix` gives you a way to write derivations that are potentially less
+    reproducible, even in `pure-eval` mode (where you would expect that
+    all downloaded files must be hashed).
+
+    However, reproducibility of Nix builds can be thwarted in many other ways
+    than just `evil-nix`, so the techniques from `evil-nix` are not something
+    to worry about in practice.
+
+    (You should of course be careful with evaluating any untrusted Nix code from
+    the internet, _very_ careful with building any untrusted Nix derivations
+    from the internet, and **_extremely_** careful with running any untrusted
+    binaries from the internet.)
 
 1.  _Does this work with MD5 hashes instead of SHA1 hashes?_
 
-1.  _Does `evilDownloadUrl` require import from derivation (IFD)?_
+    Yes.
 
-1.  _difference between `builtins.fetchTarball`_
+    Nix currently supports many different hash types for fixed-output
+    derivations, including insecure hashes like MD5 and SHA1.
 
-1.  _how could Nix be fixed to make `evilDownladUrl` stop working_
+    The technique used by `evil-nix` relies on SHA1 collisions, but MD5
+    collisions could be used instead.
 
-    - disallow MD5 and SHA1 hashes in pure-eval mode
-    - turn off MD5 and SHA1 support by default, and hide functionality behind a config option
+1.  _Does `evilDownloadUrl` require [import from derivation](https://blog.hercules-ci.com/2019/08/30/native-support-for-import-for-derivation/) (IFD)?_
+
+    No.
+
+    `evilDownloadUrl` does current makes use of IFD in order to read the length
+    of the file in bytes at the specified URL.  However, it would be trivial to
+    have `evilDownloadUrl` also take the file length as an input.
+
+    The end-user would have to specify the file length they want to download,
+    but then `evilDownloadUrl` could work with the
+    `--no-allow-import-from-derivation` option.
+
+1.  _What is the difference between `evilDownloadUrl` and `builtins.fetchTarball`?_
+
+    Nix provides a few built-in functions that enable you to download files
+    from the internet without needing to specify a hash.  One example is
+    `builtins.fetchTarball`.
+
+    The difference between `builtins.fetchTarball` and `evilDownloadUrl` is
+    that `evilDownloadUrl` works even in Nix's
+    [pure-eval](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-pure-eval)
+    mode.  If you try to use `builtins.fetchTarball` in pure-eval mode without
+    specifying a hash, Nix will give you an error message.
+
+1.  _Could Nix be fixed to stop `evilDownladUrl` from working?_
+
+    Yes.
+
+    If Nix removed support for MD5 and SHA1 hashes for fixed-output
+    derivations, that would stop `evilDownloadUrl` from working.
+    However, it appears that MD5 and SHA1 support haven't been
+    removed from Nix in order to support
+    [backwards compatibility](https://github.com/NixOS/nix/issues/802#issuecomment-559759865).
+
+    Here two some potential changes that could be made in Nix that would stop
+    `evilDownloadUrl` from working, but wouldn't completely break backwards
+    compatibility:
+
+    -   Disallow MD5 and SHA1 hashes for fixed-output derivations in pure-eval
+        mode.
+
+        If someone wanted to use Nix to evaluate old Nix code that contained
+        MD5 or SHA1 hashes, they would have to turn off pure-eval mode.  This
+        seems like it could be a reasonable trade-off, especially since
+        pure-eval mode is a relatively recent addition to Nix.
+
+    -   Completely disable MD5 and SHA1 support by default, and hide
+        functionality behind a config option.
+
+        If someone wanted to use Nix to evaluate old Nix code, they'd have to
+        explicitly turn on the option that enables support for these weaker
+        hash functions.
+
+    In practice, no recent Nix code uses MD5 or SHA1 hashes.  I don't think
+    I've ever seen an MD5 or SHA1 hash in Nix code in the wild in at least the
+    last 5 years or so.
 
 1.  _can `evildDownloadUrl` return different data everytime it is called_
 
