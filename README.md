@@ -182,17 +182,22 @@ and version (`name = "hello-2.12.1"`), and takes the input source code from the
 current directory (`src = ./.`).  It declares two needed build tools, `gcc` and
 `make`.
 
-You may be wondering why there is no code explicitly calling `./configure &&
+You may be wondering why there is no code explicitly running `./configure &&
 make && make install`.  The `mkDerivation` function has internal support for
 checking if there is an Automake build system, and automatically runs these
 commands for us.  Pretty convenient!  Nix of course allows you to specify any
-arbitrary build commands you may want to run (similar to a `Dockerfile`), but in this
+arbitrary build commands (similar to a `Dockerfile`), but in this
 case it is not needed.
 
 If this derivation is saved to a file in the current directory called
 `hello.nix` (and the current directory also contains the source code for the
 GNU Hello package), you should be able to build this derivation with a command
 like the following:
+
+
+```console
+$ nix-build ./hello.nix
+```
 
 > Note that this `./hello.nix` file is not a _real_ derivation, and you can't
 > actually save it to disk and run it as-is.  It has been slightly modified to
@@ -202,10 +207,6 @@ like the following:
 > 1. [Your First Derivation](https://github.com/justinwoo/nix-shorts/blob/master/posts/your-first-derivation.md)
 > 2. [Hacking Your First Package](https://nix-tutorial.gitlabpages.inria.fr/nix-tutorial/first-package.html)
 > 3. [My first Nix derivation](https://www.adelbertc.com/first-nix-derivation/)
-
-```console
-$ nix-build ./hello.nix
-```
 
 This `nix-build` tool passes off the derivation to a system daemon.  The system
 daemon starts up a sandbox using Linux namespaces and cgroups, and pulls in all
