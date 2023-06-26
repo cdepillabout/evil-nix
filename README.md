@@ -443,7 +443,72 @@ _real_ build tool, like _Docker_.
     I've ever seen an MD5 or SHA1 hash in Nix code in the wild in at least the
     last 5 years or so.
 
-1.  _can `evildDownloadUrl` return different data everytime it is called_
+1.  _Can `evildDownloadUrl` return different data everytime it is called with the same URL?_
+
+    Imagine you have a URL like `http://example.com/random` that returns a
+    random number everytime it is called:
+
+    ```console
+    $ curl http://example.com/random
+    16
+    $ curl http://example.com/random
+    42
+    ```
+
+    Is it possible have `evilDownloadUrl` also return a completely random
+    number everytime it is called with this URL?
+
+    Sort of.
+
+    If you run a command like the following, `evilDownloadUrl` will
+    return the contents of the URL, and all the build artifacts will
+    be cached to the Nix store:
+
+    ```console
+    $ nix-build --argstr url "http://example.com/random"
+    $ cat ./result
+    16
+    ```
+
+    If you have a friend run the same command on their computer, they will get
+    a different output (like `42`).
+
+    However, on your machine, since all the build outputs are already in the
+    Nix store, if you build it again, you will get the same output:
+
+    ```console
+    $ nix-build --argstr url "http://example.com/random"
+    $ cat ./result
+    16
+    ```
+
+    One way to work around this is to collect the garbage in your Nix store,
+    and re-run the build:
+
+    ```console
+    $ rm ./result
+    $ nix-collect-garbage
+    $ nix-build --argstr url "http://example.com/random"
+    $ cat ./result
+    77
+    ```
+
+    Alternatively, you could modify `evilDownloadUrl` to take an additional
+    argument that allows you to "bust" the cache:
+
+    ```console
+    $ rm ./result
+    $ nix-collect-garbage
+    $ nix-build --argstr url "http://example.com/random" --argstr cache-buster foo
+    $ cat ./result
+    48
+    $ nix-build --argstr url "http://example.com/random" --argstr cache-buster bar
+    $ cat ./result
+    3
+    ```
+
+    This cache busting value would to be supplied by the end user, but there
+    are some places it could be used.
 
 ## Acknowledgements
 
