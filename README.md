@@ -389,7 +389,7 @@ _real_ build tool, like _Docker_.
     Yes.
 
     Nix currently supports many different hash types for fixed-output
-    derivations, including insecure hashes like MD5 and SHA1.
+    derivations, including insecure hash functions like MD5 and SHA1.
 
     The technique used by `evil-nix` relies on SHA1 collisions, but MD5
     collisions could be used instead.
@@ -398,9 +398,9 @@ _real_ build tool, like _Docker_.
 
     No.
 
-    `evilDownloadUrl` does current makes use of IFD in order to read the length
-    of the file in bytes at the specified URL.  However, it would be trivial to
-    have `evilDownloadUrl` also take the file length as an input.
+    `evilDownloadUrl` does currently makes use of IFD in order to read the length
+    of the file in bytes before downloading.  However, it would be trivial to have
+    `evilDownloadUrl` also take the file length as an input.
 
     The end-user would have to specify the file length they want to download,
     but then `evilDownloadUrl` could work with the
@@ -424,31 +424,31 @@ _real_ build tool, like _Docker_.
 
     If Nix removed support for MD5 and SHA1 hashes for fixed-output
     derivations, that would stop `evilDownloadUrl` from working.
-    However, it appears that MD5 and SHA1 support haven't been
-    removed from Nix in order to support
+    However, it appears that MD5 and SHA1 hashes are still supported
+    in the name of
     [backwards compatibility](https://github.com/NixOS/nix/issues/802#issuecomment-559759865).
 
-    Here two some potential changes that could be made in Nix that would stop
+    Here are two potential changes that could be made to Nix that would stop
     `evilDownloadUrl` from working, but wouldn't completely break backwards
     compatibility:
 
     -   Disallow MD5 and SHA1 hashes for fixed-output derivations in pure-eval
         mode.
 
-        If someone wanted to use Nix to evaluate old Nix code that contained
-        MD5 or SHA1 hashes, they would have to turn off pure-eval mode.  This
-        seems like it could be a reasonable trade-off, especially since
-        pure-eval mode is a relatively recent addition to Nix.
+        If someone wanted to use a new version of Nix to evaluate old Nix code
+        that contained MD5 or SHA1 hashes, they would have to turn off
+        pure-eval mode.  This seems like it could be a reasonable trade-off,
+        especially since pure-eval mode is a relatively recent addition to Nix.
 
     -   Completely disable MD5 and SHA1 support by default, and hide
         functionality behind a config option.
 
-        If someone wanted to use Nix to evaluate old Nix code, they'd have to
-        explicitly turn on the option that enables support for these weaker
-        hash functions.
+        If someone wanted to use a new version of Nix to evaluate old Nix code
+        that contained MD5 of SHA1 hashes, they would have to explicitly turn on
+        the option that enables support for these weaker hash functions.
 
     In practice, no recent Nix code uses MD5 or SHA1 hashes.  I don't think
-    I've ever seen an MD5 or SHA1 hash in Nix code in the wild in at least the
+    I've ever seen an MD5 or SHA1 hash in Nix code in the wild, at least in the
     last 5 years or so.
 
 1.  _Can `evildDownloadUrl` return different data every time it is called with the same URL?_
@@ -481,7 +481,7 @@ _real_ build tool, like _Docker_.
     If you have a friend run the same command on their computer, they will get
     a different output (like `42`).
 
-    However, if you build it again on your machine, since all the build outputs
+    However, if you build it again on your own machine, since all the build outputs
     are already in the Nix store, you will get the same output as previously:
 
     ```console
@@ -530,6 +530,6 @@ files from the internet.  It then generalizes the approach even more to allow
 downloading full files from the internet, without needing to specify the hash
 of the file.
 
-Thanks to [@sternenseemann](https://github.com/sternenseemann) for originally linking me to the
-above commit, and suggesting it as a potential approach to
+Thanks to [@sternenseemann](https://github.com/sternenseemann) for originally
+linking me to the above commit, and suggesting it as a potential approach to
 [this issue](https://github.com/NixOS/nixpkgs/issues/223390).
