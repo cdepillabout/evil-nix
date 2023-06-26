@@ -369,159 +369,160 @@ them, and rest assured in your current build system's mishmash of Makefiles,
 Bash scripts, YAML files, and containers.
 
 If your coworker still won't take the hint, suggest to them that they should learn a
-_real_ build tool, like _Docker_.
+_real_ build tool, like Docker.
 
 ## FAQ
 
-1.  _Does `evil-nix` pose a security-related problem to the Nix ecosystem?_
+##### _Does `evil-nix` pose a security-related problem to the Nix ecosystem?_
 
-    No.
+No.
 
-    `evil-nix` gives you a way to write derivations that are potentially less
-    reproducible, even in `pure-eval` mode (where you would expect that
-    all downloaded files must be hashed).
+`evil-nix` gives you a way to write derivations that are potentially less
+reproducible, even in
+[pure-eval](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-pure-eval)
+mode (where you would expect that all downloaded files must be hashed).
 
-    However, reproducibility of Nix builds can be thwarted in many other ways
-    than just `evil-nix`, so the techniques from `evil-nix` are not something
-    to worry about in practice.
+However, reproducibility of Nix builds can be thwarted in many other ways
+than just `evil-nix`, so the techniques from `evil-nix` are not something
+to worry about in practice.
 
-    (You should of course be careful with evaluating any untrusted Nix code from
-    the internet, _very_ careful with building any untrusted Nix derivations
-    from the internet, and **_extremely_** careful with running any untrusted
-    binaries from the internet.)
+(You should, of course, be careful with evaluating any untrusted Nix code from
+the internet. You should be _very_ careful with building any untrusted Nix
+derivations from the internet. And you should be **_extremely_** careful
+with running any untrusted binaries from the internet.)
 
-1.  _Does this work with MD5 hashes instead of SHA1 hashes?_
+##### _Does this work with MD5 hashes instead of SHA1 hashes?_
 
-    Yes.
+Yes.
 
-    Nix currently supports many different hash types for fixed-output
-    derivations, including insecure hash functions like MD5 and SHA1.
+Nix currently supports many different hash types for fixed-output
+derivations, including insecure hash functions like MD5 and SHA1.
 
-    The technique used by `evil-nix` relies on SHA1 collisions, but MD5
-    collisions could be used instead.
+The technique used by `evil-nix` relies on SHA1 collisions, but MD5
+collisions could be used instead.
 
-1.  _Does `evilDownloadUrl` require [import from derivation](https://blog.hercules-ci.com/2019/08/30/native-support-for-import-for-derivation/) (IFD)?_
+##### _Does `evilDownloadUrl` require [import from derivation](https://blog.hercules-ci.com/2019/08/30/native-support-for-import-for-derivation/) (IFD)?_
 
-    No.
+No.
 
-    `evilDownloadUrl` does currently makes use of IFD in order to read the length
-    of the file in bytes before downloading.  However, it would be trivial to have
-    `evilDownloadUrl` also take the file length as an input.
+`evilDownloadUrl` does currently makes use of IFD in order to read the length
+of the file in bytes before downloading.  However, it would be trivial to have
+`evilDownloadUrl` also take the file length as an input.
 
-    The end-user would have to specify the file length they want to download,
-    but then `evilDownloadUrl` could work with the
-    `--no-allow-import-from-derivation` option.
+The end-user would have to specify the file length they want to download,
+but then `evilDownloadUrl` could work with the
+`--no-allow-import-from-derivation` option.
 
-1.  _What is the difference between `evilDownloadUrl` and `builtins.fetchTarball`?_
+##### _What is the difference between `evilDownloadUrl` and `builtins.fetchTarball`?_
 
-    Nix provides a few built-in functions that enable you to download files
-    from the internet without needing to specify a hash.  One example is
-    `builtins.fetchTarball`.
+Nix provides a few built-in functions that enable you to download files
+from the internet without needing to specify a hash.  One example is
+`builtins.fetchTarball`.
 
-    The difference between `builtins.fetchTarball` and `evilDownloadUrl` is
-    that `evilDownloadUrl` works even in Nix's
-    [pure-eval](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-pure-eval)
-    mode.  If you try to use `builtins.fetchTarball` in pure-eval mode without
-    specifying a hash, Nix will give you an error message.
+The difference between `builtins.fetchTarball` and `evilDownloadUrl` is
+that `evilDownloadUrl` works even in Nix's
+[pure-eval](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-pure-eval)
+mode.  If you try to use `builtins.fetchTarball` in pure-eval mode without
+specifying a hash, Nix will give you an error message.
 
-1.  _Could Nix be fixed to stop `evilDownladUrl` from working?_
+##### _Could Nix be fixed to stop `evilDownladUrl` from working?_
 
-    Yes.
+Yes.
 
-    If Nix removed support for MD5 and SHA1 hashes for fixed-output
-    derivations, that would stop `evilDownloadUrl` from working.
-    However, it appears that MD5 and SHA1 hashes are still supported
-    in the name of
-    [backwards compatibility](https://github.com/NixOS/nix/issues/802#issuecomment-559759865).
+If Nix removed support for MD5 and SHA1 hashes for fixed-output
+derivations, that would stop `evilDownloadUrl` from working.
+However, it appears that MD5 and SHA1 hashes are still supported
+in the name of
+[backwards compatibility](https://github.com/NixOS/nix/issues/802#issuecomment-559759865).
 
-    Here are two potential changes that could be made to Nix that would stop
-    `evilDownloadUrl` from working, but wouldn't completely break backwards
-    compatibility:
+Here are two potential changes that could be made to Nix that would stop
+`evilDownloadUrl` from working, but wouldn't completely break backwards
+compatibility:
 
-    -   Disallow MD5 and SHA1 hashes for fixed-output derivations in pure-eval
-        mode.
+-   Disallow MD5 and SHA1 hashes for fixed-output derivations in pure-eval
+    mode.
 
-        If someone wanted to use a new version of Nix to evaluate old Nix code
-        that contained MD5 or SHA1 hashes, they would have to turn off
-        pure-eval mode.  This seems like it could be a reasonable trade-off,
-        especially since pure-eval mode is a relatively recent addition to Nix.
+    If someone wanted to use a new version of Nix to evaluate old Nix code
+    that contained MD5 or SHA1 hashes, they would have to turn off
+    pure-eval mode.  This seems like it could be a reasonable trade-off,
+    especially since pure-eval mode is a relatively recent addition to Nix.
 
-    -   Completely disable MD5 and SHA1 support by default, and hide
-        functionality behind a config option.
+-   Completely disable MD5 and SHA1 support by default, and hide
+    functionality behind a config option.
 
-        If someone wanted to use a new version of Nix to evaluate old Nix code
-        that contained MD5 of SHA1 hashes, they would have to explicitly turn on
-        the option that enables support for these weaker hash functions.
+    If someone wanted to use a new version of Nix to evaluate old Nix code
+    that contained MD5 of SHA1 hashes, they would have to explicitly turn on
+    the option that enables support for these weaker hash functions.
 
-    In practice, no recent Nix code uses MD5 or SHA1 hashes.  I don't think
-    I've ever seen an MD5 or SHA1 hash in Nix code in the wild, at least in the
-    last 5 years or so.
+In practice, no recent Nix code uses MD5 or SHA1 hashes.  I don't think
+I've ever seen an MD5 or SHA1 hash in Nix code in the wild, at least in the
+last 5 years or so.
 
-1.  _Can `evildDownloadUrl` return different data every time it is called with the same URL?_
+##### _Can `evildDownloadUrl` return different data every time it is called with the same URL?_
 
-    Imagine you have a URL like `http://example.com/random` that returns a
-    random number everytime it is called:
+Imagine you have a URL like `http://example.com/random` that returns a
+random number everytime it is called:
 
-    ```console
-    $ curl http://example.com/random
-    16
-    $ curl http://example.com/random
-    42
-    ```
+```console
+$ curl http://example.com/random
+16
+$ curl http://example.com/random
+42
+```
 
-    Is it possible have `evilDownloadUrl` also return a completely random
-    number everytime it is called with this same URL?
+Is it possible have `evilDownloadUrl` also return a completely random
+number everytime it is called with this same URL?
 
-    Sort of.
+Sort of.
 
-    If you run a command like the following, `evilDownloadUrl` will
-    return the contents of the URL, and all the build artifacts will
-    be cached to the Nix store:
+If you run a command like the following, `evilDownloadUrl` will
+return the contents of the URL, and all the build artifacts will
+be cached to the Nix store:
 
-    ```console
-    $ nix-build --argstr url "http://example.com/random"
-    $ cat ./result
-    16
-    ```
+```console
+$ nix-build --argstr url "http://example.com/random"
+$ cat ./result
+16
+```
 
-    If you have a friend run the same command on their computer, they will get
-    a different output (like `42`).
+If you have a friend run the same command on their computer, they will get
+a different output (like `42`).
 
-    However, if you build it again on your own machine, since all the build outputs
-    are already in the Nix store, you will get the same output as previously:
+However, if you build it again on your own machine, since all the build outputs
+are already in the Nix store, you will get the same output as previously:
 
-    ```console
-    $ nix-build --argstr url "http://example.com/random"
-    $ cat ./result
-    16
-    ```
+```console
+$ nix-build --argstr url "http://example.com/random"
+$ cat ./result
+16
+```
 
-    One way to work around this is to collect the garbage in your Nix store,
-    and re-run the build:
+One way to work around this is to collect the garbage in your Nix store,
+and re-run the build:
 
-    ```console
-    $ rm ./result
-    $ nix-collect-garbage
-    $ nix-build --argstr url "http://example.com/random"
-    $ cat ./result
-    77
-    ```
+```console
+$ rm ./result
+$ nix-collect-garbage
+$ nix-build --argstr url "http://example.com/random"
+$ cat ./result
+77
+```
 
-    Alternatively, you could modify `evilDownloadUrl` to take an additional
-    argument that allows you to "bust" the cache:
+Alternatively, you could modify `evilDownloadUrl` to take an additional
+argument that allows you to "bust" the cache:
 
-    ```console
-    $ rm ./result
-    $ nix-collect-garbage
-    $ nix-build --argstr url "http://example.com/random" --argstr cache-buster foo
-    $ cat ./result
-    48
-    $ nix-build --argstr url "http://example.com/random" --argstr cache-buster bar
-    $ cat ./result
-    3
-    ```
+```console
+$ rm ./result
+$ nix-collect-garbage
+$ nix-build --argstr url "http://example.com/random" --argstr cache-buster foo
+$ cat ./result
+48
+$ nix-build --argstr url "http://example.com/random" --argstr cache-buster bar
+$ cat ./result
+3
+```
 
-    This cache-busting value would need to be supplied by the end user.
+This cache-busting value would need to be supplied by the end user.
 
 ## Acknowledgements
 
