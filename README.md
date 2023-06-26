@@ -199,10 +199,12 @@ like the following:
 $ nix-build ./hello.nix
 ```
 
-> Note that this `./hello.nix` file is not a _real_ derivation, and you can't
-> actually save it to disk and run it as-is.  It has been slightly modified to
-> be easier to understand for people new to Nix.  Checkout one of the following
-> tutorials an intro to writing real derivations:
+> This `./hello.nix` file is not a _real_ derivation, and you can't save it to
+> disk and run it as-is.  It has been modified to be easier to
+> understand for people new to Nix.
+>
+> If you're interesting in writing your first real Nix derivation, checkout one
+> of the following tutorials:
 >
 > 1. [Your First Derivation](https://github.com/justinwoo/nix-shorts/blob/master/posts/your-first-derivation.md)
 > 2. [Hacking Your First Package](https://nix-tutorial.gitlabpages.inria.fr/nix-tutorial/first-package.html)
