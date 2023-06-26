@@ -17,10 +17,13 @@ This library provides an `evilDownloadUrl` function, which takes a single URL
 as an argument, and downloads the file.
 
 > **WARNING**: This `evilDownloadUrl` function is terribly inefficient.  It may
-> use up all your disk space, and DOS the site you're trying to download from.
+> use up significant disk space, and DOS the site you're trying to download from.
 > I don't recommend using it to download a file larger than 50 bytes or so
 > (unless you really know what you're doing).  The reason for this inefficiency
 > is explained in the next section.
+>
+> This section uses an example URL that returns a file that is only a few bytes
+> long, so in general it should be safe to test out and play around with.
 
 You can play around with this function in the Nix REPL:
 
@@ -78,8 +81,8 @@ trying to download.  For instance, if you were trying to download a
 download the file _80_ times.
 
 `evilDownloadUrl` also makes a lot of garbage in your Nix store.  Downloading a
-50 byte file makes about 4MB of garbage in your Nix store.  This scales
-linearly. For example, a 100 byte would make about 8MB of garbage.
+50 byte file creates about 4MB of garbage in your Nix store.  This scales
+linearly. For example, a 100 byte would create about 8MB of garbage.
 
 It is also very slow.  Downloading a 50 byte file takes about 30 seconds on my
 machine.
@@ -109,14 +112,14 @@ $ nix-store --delete /nix/store/*-bitvalue-* /nix/store/*BitNum-* /nix/store/*-f
 ## How does this work?
 
 The `evilDownloadUrl` function works by internally creating a fixed-output
-derivation which outputs one of two known files, both with the same SHA1 hash.
+derivation which outputs one of two known PDF files, both with the same SHA1 hash.
 This fixed-output derivation is allowed to access the network, and outputs
-one file to represent a single `1` bit, and the other file to represent a
+one PDF file to represent a single `1` bit, and the other PDF file to represent a
 single `0` bit.  This effectively leaks one bit of information from the
 internet in a non-reproducible manner.
 
 `evilDownloadUrl` combines many of these 1-bit-leaking fixed-output derivations
-in order to download an entire file from the internet.
+in order to download the entire specified file from the internet.
 
 The next section is an introduction to Nix for a non-Nixer (or anyone that
 needs a refresher), focusing on the concepts needed to explain how
@@ -136,22 +139,25 @@ Nix.
 > long-time Nix user, you're recommended to just jump directly to the technical
 > explanation in the following section.
 
-The Nix ecosystem is comprised of quite a few different things.  It is a build
-tool and system daemon, somewhat similar to `docker build` and `dockerd`.  It
-is also a programming language, similar to the language used to write
-`Dockerfile`s, although Nix more powerful and more composable.  There is a
-large set of packages defined using the Nix language, called
-[Nixpkgs](https://github.com/NixOS/nixpkgs).  This is somewhat similar to the
-Debian or Arch Linux package sets.  Although, because of Nix's programability
-and composability, Nixpkgs feels much more flexible than other Linux distro's
-package sets.
+The Nix ecosystem is comprised of [quite a few different things]():
 
-There is also a Linux distribution called NixOS, which uses the Nix programming
-language to define system settings (for example, the contents of files in
-`/etc`), and uses packages from Nixpkgs.  NixOS feels like a cross between a
-normal Linux distribution and a tool like Ansible/Puppet/Chef.
+-   Nix is a build tool and system daemon, somewhat similar to `docker build` and `dockerd`.
 
-In order to understand `evil-nix`, we only need to look at the Nix
+-   Nix is also a programming language, similar to the language used to write
+    `Dockerfile`s (although Nix is more powerful and more composable)
+
+-   There is a large set of packages defined using the Nix language, called
+    [Nixpkgs](https://github.com/NixOS/nixpkgs).  Nixpkgs is somewhat similar
+    to the Debian or Arch Linux package sets.  Although, because of Nix's
+    programability and composability, Nixpkgs feels much more flexible than
+    other Linux distro's package sets.
+
+-   There is a Linux distribution called NixOS, which uses the Nix programming
+    language to define system settings (for example, the contents of files in
+    `/etc`), and uses packages from Nixpkgs.  NixOS feels like a cross between
+    a normal Linux distribution and a tool like Ansible/Puppet/Chef.
+
+In order to understand `evil-nix`, we only need to look at Nix
 the-programming-language and Nix the-build-tool.
 
 The Nix programming language has a concept of a _derivation_.  A derivation is
@@ -170,14 +176,15 @@ stdenv.mkDerivation {
 
 This is a derivation to build the
 [GNU Hello](https://www.gnu.org/software/hello/) program. It declares its name
-and version, and takes the input source code from the current directory.  It
-declares two needed build tools, `gcc` and `make`.
+and version (`name = "hello-2.12.1"`), and takes the input source code from the
+current directory (`src = ./.`).  It declares two needed build tools, `gcc` and
+`make`.
 
 You may be wondering why there is no code explicitly calling `./configure &&
 make && make install`.  The `mkDerivation` function has internal support for
 checking if there is an Automake build system, and automatically runs these
 commands for us.  Pretty convenient!  Nix of course allows you to specify any
-arbitrary build commands you may want (similar to a `Dockerfile`), but in this
+arbitrary build commands you may want to run (similar to a `Dockerfile`), but in this
 case it is not needed.
 
 If this derivation is saved to a file in the current directory called
@@ -199,15 +206,16 @@ $ nix-build ./hello.nix
 ```
 
 This `nix-build` tool passes off the derivation to a system daemon.  The system
-daemon starts up a sandbox, and pulls in all the declared build tools,
-system libraries, and source code.  In our case, the only build tools that has
-been declared and available in the sandbox are `gcc` and `make`.  The system
-daemon then runs the specified build steps in the sandbox environment (which in
-our case are `./configure && make && make install`).  After running a build,
-the derivation is responsible for _outputting_ a file (or a directory
-containing multiple files).  The output file is is known as the _output of the
-derivation_ (or just "_output_").  The output of a derivation is generally
-an ELF binary, HTML documentation, man pages, etc.
+daemon starts up a sandbox using Linux namespaces and cgroups, and pulls in all
+the declared build tools, system libraries, and source code.  In our case, the
+only build tools that have been declared and available in the sandbox are `gcc`
+and `make`.  The system daemon then runs the specified build steps in the
+sandbox environment (which in our case are `./configure && make && make
+install`).  After running a build, the derivation is responsible for
+_outputting_ a file (or a directory containing multiple files).  The output
+file is is known as the _output of the derivation_ (or just the "_output_").  The
+output of a derivation is generally an ELF binary, HTML documentation, man
+pages, etc.
 
 The sandbox is a key element here. The Nix system daemon sandbox is very
 similar to the Docker daemon sandbox. However, the Nix system daemon goes one
@@ -234,7 +242,7 @@ fetchurl {
 Fixed-output derivations are special in that they require the hash of the
 _output_ of the derivation to be specified in advance (the `sha256 =` line above). In
 exchange for specifying the hash, the Nix system daemon sandbox allows access
-to the network.  The above derivation will use `curl` to download the
+to the network.  The above derivation is allowed to use `curl` to download the
 `hello-2.12.1.tar.gz` file, and set it as the _output_ of this fixed-output
 derivation.  This `hello-2.12.1.tar.gz` file must have the SHA256 hash
 `sha256-jZkUKv2SV28wsM18tCqNxoCZmLxdYH2Idh9RLibH2yA=`.
@@ -282,10 +290,10 @@ fixed-output derivations.
 
 ### Technical Explanation
 
-The main trick in `evilDownloadUrl` is a fixed-output derivation that is able
-to return one bit of (non-hashed) data from the internet.  This fixed-output
-derivation works by preparing two different output files.  Let's call these
-output files `pdfA` and `pdfB`.
+The main trick in `evilDownloadUrl` is a fixed-output derivation that returns
+one bit of (non-hashed) data from the internet.  This fixed-output derivation
+works by first preparing two different output files.  Let's call these output files
+`pdfA` and `pdfB`.
 
 These are special PDF files that have the same SHA1 hash.  The hash of the
 fixed-output derivation is set to this SHA1 hash.  This works because Nix still
@@ -300,8 +308,8 @@ output. If the bit is a `0`, it sets `pdfB` as the output.
 This is the critical trick.  From an information-theoretic perspective, you
 would expect that a fixed-output derivation is not able to realistically
 produce any additional information that is not already accounted for in the
-hash of the output.  However, combining a fixed-output derivation and a hash
-function with known collisions enables you to sneak out a single bit of data.
+hash of the output.  However, by combining a fixed-output derivation and a hash
+function with known collisions, it is possible to sneak out a single bit of data.
 
 You can see what this fixed-output derivation looks like in the file
 [`nix/evil/downloadBitNum.nix`](./nix/evil/downloadBitNum.nix).  This
@@ -315,7 +323,7 @@ referred to as `fetchBit` in the codebase.
 `pdfA` or `pdfB`. If `pdfA` has been output, then `fetchBit` will create a
 single output file with the contents of an ASCII `1` character.  If
 `downloadBitNum` has output `pdfB`, then `fetchBit` will create a single output
-file with the contents of an ASCII `2` character.
+file with the contents of an ASCII `0` character.
 
 You can see what `fetchBit` looks like in the file
 [`nix/evil/fetchBit.nix`](./nix/evil/fetchBit.nix).
@@ -351,10 +359,10 @@ haha"
 
 Your coworker will likely start sputtering about sandboxes, unsafe hash
 functions, build purity, composability, etc.  However, you can safely ignore
-them, and rest assured in your current build system's mismatch of Makefiles,
+them, and rest assured in your current build system's mishmash of Makefiles,
 Bash scripts, YAML files, and containers.
 
-If they still won't take the hint, suggest to them that they should learn a
+If your coworker still won't take the hint, suggest to them that they should learn a
 _real_ build tool, like _Docker_.
 
 ## FAQ
@@ -521,3 +529,7 @@ implementation was in
 files from the internet.  It then generalizes the approach even more to allow
 downloading full files from the internet, without needing to specify the hash
 of the file.
+
+Thanks to [@sternenseemann](https://github.com/sternenseemann) for originally linking me to the
+above commit, and suggesting it as a potential approach to
+[this issue](https://github.com/NixOS/nixpkgs/issues/223390).
