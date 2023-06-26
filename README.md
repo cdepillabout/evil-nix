@@ -512,3 +512,13 @@ _real_ build tool, like _Docker_.
 
 ## Acknowledgements
 
+As far as I know, [@aszlig](https://github.com/aszlig) came up with the idea of
+using fixed-output derivations with hash collisions in order to check whether
+or not given URLs can be downloaded.  The first implementation was in this commit:
+
+https://github.com/NixOS/nixpkgs/commit/28b289efa642261d7a5078cfa3a05ef1d6fa2826
+
+`evil-nix` generalizes this technique to allow downloading arbitrary bits of
+files from the internet.  It then generalizes the approach some more to allow
+downloading full files from the internet, without needing to specify the hash
+of the file.
