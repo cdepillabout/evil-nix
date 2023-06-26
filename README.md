@@ -16,14 +16,14 @@ codebase.  But it is a fun trick!
 This library provides an `evilDownloadUrl` function, which takes a single URL
 as an argument, and downloads the file.
 
-> **WARNING**: This `evilDownloadUrl` function is terribly inefficient.  It may
-> use up significant disk space, and DOS the site you're trying to download from.
-> I don't recommend using it to download a file larger than 50 bytes or so
-> (unless you really know what you're doing).  The reason for this inefficiency
-> is explained in the next section.
+> **WARNING**: `evilDownloadUrl` is terribly inefficient.  It may use up
+> significant disk space, and DOS the site you're trying to download from. I
+> don't recommend using it to download a file larger than 50 bytes or so
+> (unless you really know what you're doing).  The reasons for this inefficiency
+> are explained in the next section.
 >
-> This section uses an example URL that returns a file that is only a few bytes
-> long, so in general it should be safe to test out and play around with.
+> This section uses an example file that is only a few bytes long, so in
+> general it should be safe to test out and play around with.
 
 You can play around with this function in the Nix REPL:
 
