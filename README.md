@@ -40,6 +40,8 @@ You can confirm that this file actually contains the contents of the URL:
 ```console
 $ cat /nix/store/jhyzz6l9ryjl1npdf4alqyi1fy2qx1f0-fetchBytes-6bba65f4567f4165109177a5dafd5972882643e15d454018586fed35b068acf5-12
 hello world
+$ curl "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello-world.txt"
+hello world
 ```
 
 There is also a top-level [`default.nix`](./default.nix) file that can be used to play around with
@@ -82,7 +84,7 @@ download the file _80_ times.
 
 `evilDownloadUrl` also makes a lot of garbage in your Nix store.  Downloading a
 50 byte file creates about 4MB of garbage in your Nix store.  This scales
-linearly. For example, a 100 byte would create about 8MB of garbage.
+linearly, so for example a 100 byte would create about 8MB of garbage.
 
 It is also very slow.  Downloading a 50 byte file takes about 30 seconds on my
 machine.
@@ -139,16 +141,16 @@ Nix.
 > long-time Nix user, you're recommended to just jump directly to the technical
 > explanation in the following section.
 
-The Nix ecosystem is comprised of [quite a few different things]():
+The Nix ecosystem is comprised of [quite a few different things](https://www.haskellforall.com/2022/08/stop-calling-everything-nix.html):
 
 -   Nix is a build tool and system daemon, somewhat similar to `docker build` and `dockerd`.
 
--   Nix is also a programming language, similar to the language used to write
-    `Dockerfile`s (although Nix is more powerful and more composable)
+-   Nix is also a programming language, roughly comparable to the language used to write
+    `Dockerfile`s (although Nix is more powerful and composable)
 
 -   There is a large set of packages defined using the Nix language, called
     [Nixpkgs](https://github.com/NixOS/nixpkgs).  Nixpkgs is somewhat similar
-    to the Debian or Arch Linux package sets.  Although, because of Nix's
+    to the Debian or Arch Linux package sets.  Because of Nix's
     programability and composability, Nixpkgs feels much more flexible than
     other Linux distro's package sets.
 
@@ -160,9 +162,9 @@ The Nix ecosystem is comprised of [quite a few different things]():
 In order to understand `evil-nix`, we only need to look at Nix
 the-programming-language and Nix the-build-tool.
 
-The Nix programming language has a concept of a _derivation_.  A derivation is
-a recipe to build a software package.  It is roughly similar to a `Dockerfile`.
-Let's look at a simple derivation:
+The Nix programming language has a concept of a _derivation_.  A derivation can
+be thought of as a recipe to build a software package.  It is roughly similar
+to a `Dockerfile`. Let's look at a simple derivation:
 
 ```console
 stdenv.mkDerivation {
