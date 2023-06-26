@@ -314,7 +314,8 @@ This is the critical trick.  From an information-theoretic perspective, you
 would expect that a fixed-output derivation is not able to realistically
 produce any additional information that is not already accounted for in the
 hash of the output.  However, by combining a fixed-output derivation and a hash
-function with known collisions, it is possible to sneak out a single bit of data.
+function with known collisions, it is possible to sneak out a single bit of data
+by changing which PDF is output.
 
 You can see what this fixed-output derivation looks like in the file
 [`nix/evil/downloadBitNum.nix`](./nix/evil/downloadBitNum.nix).  This
@@ -352,7 +353,7 @@ them to form the full file.
 Due to the extreme inefficiency of `evilDownloadUrl`, the main use-case is not
 for Nix users, but actually for non-Nix users.
 
-If you work in IT, I'm sure you have at least one coworker who is _waaaay_ too
+If you work in IT, I'm sure you have at least one coworker who is _waaaaaaaaaay_ too
 into Nix.  They likely bring up Nix in every conversation about your project's
 build system, CI, packaging, deployment, etc. You've probably heard them say
 the word "hermetic" at least 5 times in the last week.
