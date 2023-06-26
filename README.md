@@ -13,8 +13,8 @@ codebase.  But it is a fun trick!
 
 ## Usage
 
-This library provides an `evilDownloadUrl` function, which downloads the file
-of the passed URL.
+This library provides an `evilDownloadUrl` function, which takes a single URL
+as an argument, and downloads the file.
 
 > **WARNING**: This `evilDownloadUrl` function is terribly inefficient.  It may
 > use up all your disk space, and DOS the site you're trying to download from.
@@ -39,7 +39,7 @@ $ cat /nix/store/jhyzz6l9ryjl1npdf4alqyi1fy2qx1f0-fetchBytes-6bba65f4567f4165109
 hello world
 ```
 
-There is also a top-level `default.nix` that can be used to play around with
+There is also a top-level [`default.nix`](./default.nix) file that can be used to play around with
 this function:
 
 ```console
@@ -61,7 +61,7 @@ hello world
 The neat (evil) thing about `evilDownloadUrl` is that it even works in Nix's
 [`pure-eval`](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-pure-eval)
 mode.  In theory, `pure-eval` is supposed to require all downloaded files to
-have a hash specified, but `evilDownloadUrl` works around this limitation:
+have a hash specified, but `evilDownloadUrl` works around this _limitation_:
 
 ```console
 $ nix build --pure-eval
@@ -79,7 +79,7 @@ download the file _80_ times.
 
 `evilDownloadUrl` also makes a lot of garbage in your Nix store.  Downloading a
 50 byte file makes about 4MB of garbage in your Nix store.  This scales
-linerally. For example, a 100 byte would make about 8MB of garbage.
+linearly. For example, a 100 byte would make about 8MB of garbage.
 
 It is also very slow.  Downloading a 50 byte file takes about 30 seconds on my
 machine.
@@ -108,7 +108,7 @@ $ nix-store --delete /nix/store/*-bitvalue-* /nix/store/*BitNum-* /nix/store/*-f
 
 ## How does this work?
 
-The `evilDownloadUrl` function works by internally creatinga fixed-output
+The `evilDownloadUrl` function works by internally creating a fixed-output
 derivation which outputs one of two known files, both with the same SHA1 hash.
 This fixed-output derivation is allowed to access the network, and outputs
 one file to represent a single `1` bit, and the other file to represent a
@@ -127,7 +127,7 @@ of how `evilDownloadUrl` works.
 
 This section introduces the Nix concepts required for understanding `evil-nix`.
 It does this mostly by drawing comparisons to other build tools, including
-Docker.  These will be rough comparisions, intending to give you an idea about
+Docker.  These will be rough comparisons, intending to give you an idea about
 what is going on without having to dive head-first into the inner-workings of
 Nix.
 
@@ -305,7 +305,7 @@ function with known collisions enables you to sneak out a single bit of data.
 
 You can see what this fixed-output derivation looks like in the file
 [`nix/evil/downloadBitNum.nix`](./nix/evil/downloadBitNum.nix).  This
-derivation is refered to as `downloadBitNum` in the `evil-nix` codebase.
+derivation is referred to as `downloadBitNum` in the `evil-nix` codebase.
 
 `downloadBitNum` is then wrapped with a simple (non-fixed-output) derivation
 that inspects the output of `downloadBitNum`.  This simple derivation is
@@ -337,7 +337,7 @@ them to form the full file.
 ## Use Cases
 
 Due to the extreme inefficiency of `evilDownloadUrl`, the main use-case is not
-for Nixers, but actually for non-Nix users.
+for Nix users, but actually for non-Nix users.
 
 If you work in IT, I'm sure you have at least one coworker who is _waaaay_ too
 into Nix.  They likely bring up Nix in every conversation about your project's
@@ -346,7 +346,7 @@ the word "hermetic" at least 5 times in the last week.
 
 The main use-case of `evil-nix` is for you. Next time you hear your coworker
 start to bring up Nix, hit them with "Eh, I heard Nix isn't that great.  You
-can trivially download un-hashed files.  Talk about lack of _reproducibility_,
+can trivially download unhashed files.  Talk about lack of _reproducibility_,
 haha"
 
 Your coworker will likely start sputtering about sandboxes, unsafe hash
@@ -443,7 +443,7 @@ _real_ build tool, like _Docker_.
     I've ever seen an MD5 or SHA1 hash in Nix code in the wild in at least the
     last 5 years or so.
 
-1.  _Can `evildDownloadUrl` return different data everytime it is called with the same URL?_
+1.  _Can `evildDownloadUrl` return different data every time it is called with the same URL?_
 
     Imagine you have a URL like `http://example.com/random` that returns a
     random number everytime it is called:
@@ -456,7 +456,7 @@ _real_ build tool, like _Docker_.
     ```
 
     Is it possible have `evilDownloadUrl` also return a completely random
-    number everytime it is called with this URL?
+    number everytime it is called with this same URL?
 
     Sort of.
 
@@ -473,8 +473,8 @@ _real_ build tool, like _Docker_.
     If you have a friend run the same command on their computer, they will get
     a different output (like `42`).
 
-    However, on your machine, since all the build outputs are already in the
-    Nix store, if you build it again, you will get the same output:
+    However, if you build it again on your machine, since all the build outputs
+    are already in the Nix store, you will get the same output as previously:
 
     ```console
     $ nix-build --argstr url "http://example.com/random"
@@ -507,18 +507,17 @@ _real_ build tool, like _Docker_.
     3
     ```
 
-    This cache busting value would to be supplied by the end user, but there
-    are some places it could be used.
+    This cache-busting value would need to be supplied by the end user.
 
 ## Acknowledgements
 
-As far as I know, [@aszlig](https://github.com/aszlig) came up with the idea of
-using fixed-output derivations with hash collisions in order to check whether
-or not given URLs can be downloaded.  The first implementation was in this commit:
-
-https://github.com/NixOS/nixpkgs/commit/28b289efa642261d7a5078cfa3a05ef1d6fa2826
+As far as I can tell, [@aszlig](https://github.com/aszlig) came up with the
+idea of using fixed-output derivations with hash collisions in order to
+impurely check whether or not given URLs can be downloaded.  The first
+implementation was in
+[this commit](https://github.com/NixOS/nixpkgs/commit/28b289efa642261d7a5078cfa3a05ef1d6fa2826).
 
 `evil-nix` generalizes this technique to allow downloading arbitrary bits of
-files from the internet.  It then generalizes the approach some more to allow
+files from the internet.  It then generalizes the approach even more to allow
 downloading full files from the internet, without needing to specify the hash
 of the file.
