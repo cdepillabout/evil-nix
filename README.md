@@ -48,7 +48,7 @@ There is also a top-level [`default.nix`](./default.nix) file that can be used t
 this function:
 
 ```console
-$ nix-build --argstr url "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello.txt"
+$ nix-build --argstr url "https://raw.githubusercontent.com/cdepillabout/small-example-text-files/177c95e490cf44bcc42860bf0652203d3dc87900/hello-world.txt"
 $ cat ./result
 hello world
 ```
