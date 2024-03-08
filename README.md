@@ -208,7 +208,7 @@ $ nix-build ./hello.nix
 >
 > 1. [Your First Derivation](https://github.com/justinwoo/nix-shorts/blob/master/posts/your-first-derivation.md)
 > 2. [Hacking Your First Package](https://nix-tutorial.gitlabpages.inria.fr/nix-tutorial/first-package.html)
-> 3. [My first Nix derivation](https://www.adelbertc.com/first-nix-derivation/)
+> 3. [My first Nix derivation](https://web.archive.org/web/20201129101422/https://www.adelbertc.com/first-nix-derivation/)
 
 This `nix-build` tool passes off the derivation to a system daemon.  The system
 daemon starts up a sandbox using Linux namespaces and cgroups, and pulls in all
